@@ -3,10 +3,13 @@
 #Bum catering google sheed cravler 
 # This script checks if my money is decuced from my account on daily basis in regular manner (only 250 should be deduced)
 
-script_dir=/home/milanbojovic/bash_scripts/endava/bum_catering_crawler/
+script_name="bum_credit_history"
+script_dir="/home/milanbojovic/bash_scripts/endava/bum_catering_crawler"
+log_dir="/home/milanbojovic/bash_scripts/LOGS"
+old_balance_file="bum_credit"
 
 #Read local cash balance history
-old_balance=`cat "$script_dir"bum_credit`
+old_balance=`cat "$script_dir/$old_balance_file"`
 echo "Old balance = $old_balance"
 
 #Read current cash balance from web
@@ -25,21 +28,23 @@ then
 	if [ $difference -ge 0 ]
 	then
 		output_line_full="$output_line_base OK"
-		echo "$output_line_full" | tee -a "$script_dir"bum_credit_history
+		echo "$output_line_full" | tee -a "$log_dir/$script_name"
 	else
 		output_line_full="$output_line_base OK - !!!CREDIT ADDED!!!"
-		echo "$output_line_full" | tee -a "$script_dir"bum_credit_history
+		echo "$output_line_full" | tee -a "$log_dir/$script_name"
 	fi
 else 
 	output_line_full="$output_line_base ERROR"
-	echo "$output_line_full" | tee -a "$script_dir"bum_credit_history
+	echo "$output_line_full" | tee -a "$log_dir/$script_name"
 fi
 
 #Write new balance to local balance file
-echo $new_balance > "$script_dir"bum_credit
+echo $new_balance > "$script_dir/$old_balance_file"
 
 #Send email !
-/usr/bin/mail -s "BUM INFO" milan.bojovic@endava.com << EOF
+if [ $difference -ne 0 ]
+then
+	/usr/bin/mail -s "BUM INFO" milan.bojovic@endava.com << EOF
 
 ===========================================================================================
 					DAILY BALANCE:
@@ -48,3 +53,4 @@ $output_line_full
 ===========================================================================================
 
 EOF
+fi

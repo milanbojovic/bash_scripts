@@ -18,27 +18,26 @@
 
 	diskIOUsage(){
 	    printf "\"devices\" : [\n"
-             for i in "$(iostat -d | grep -vE "Linux|Device|^$")"; do
-	 	echo "$i" | awk '{printf "{ \"NAME\" : \"%s\", \"TRANS PER SECOND/IOPS\" : %d, \"KB_READ/S\" : %d, \"KB_WRTN/S\" : %d, \"KB_READ\" : %d, \"KB_WRTN\" : %d },\n", $1, $2, $3, $4, $5, $6}';
-	     done
+	    disks="$(iostat -d | grep -vE "Linux|Device|^$")"
+	    cnt=0;
+
+	    echo "$disks" | while IFS= read -r disk
+	    do
+		((cnt=cnt+1))
+		if [ $cnt -ne 1 ]; then
+		    printf ",\n"
+		fi
+		echo "$disk" | awk '{printf "{ \"NAME\" : \"%s\", \"TRANS PER SECOND/IOPS\" : %d, \"KB_READ/S\" : %d, \"KB_WRTN/S\" : %d, \"KB_READ\" : %d, \"KB_WRTN\" : %d }", $1, $2, $3, $4, $5, $6}'
+	    done
 	    printf "\n]"
 	};
 
-printf "\nDownload script started\n\n"
-
 printf "{\n"
+
 memUsage;
-
 cpuUsage;
-
 swapUsage;
-
 diskSizeUsage;
-
 diskIOUsage;
 
 printf "\n};"
-
-
-
-printf "\nDownload script finished\n\n"

@@ -5,13 +5,14 @@ DEST_DIR="/tmp"
 LOG_FILE="$DEST_DIR/backup.log"
 S3_BUCKET="milanbojovic-backup-bucket"
 
+printf "" 															| tee $LOG_FILE
 printf "===============================================================" 							| tee -a $LOG_FILE
 printf "\nBackup JOB started on: `date +%H:%M_%d.%m.%Y.`\n" 									| tee -a $LOG_FILE
 printf "===============================================================\n"							| tee -a $LOG_FILE
 printf "\nCompressing directory contents: "$BACKUP_DIR"\n\n" 									| tee -a $LOG_FILE
 
 BACKUP_FILE_NAME="backup_`date +%H:%M_%d.%m.%Y`.tar.gz"
-tar -cvpzf "$DEST_DIR/$BACKUP_FILE_NAME" "$BACKUP_DIR/." --exclude='.[^/]*'							| tee -a $LOG_FILE
+tar -cvpzf "$DEST_DIR/$BACKUP_FILE_NAME" "$BACKUP_DIR" --exclude='.[^/]*'							| tee -a $LOG_FILE
 
 if [ $? -eq 0 ]; then
     printf "\nCompresssion successfull!\n"											| tee -a $LOG_FILE

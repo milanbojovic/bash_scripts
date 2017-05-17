@@ -1,11 +1,12 @@
 #!/bin/bash
 
-BACKUP_DIR="/home/$USER"
+USERNAME="natasakovacevic"
+BACKUP_DIR="/home/$USERNAME"
 DEST_DIR="/tmp"
 LOG_FILE="$DEST_DIR/backup.log"
-S3_BUCKET="milanbojovic-backup-bucket"
+S3_BUCKET="spartasecurity-backups"
 
-printf "" 															| tee $LOG_FILE
+printf "" 															| tee    $LOG_FILE
 printf "===============================================================" 							| tee -a $LOG_FILE
 printf "\nBackup JOB started on: `date +%H:%M_%d.%m.%Y.`\n" 									| tee -a $LOG_FILE
 printf "===============================================================\n"							| tee -a $LOG_FILE
@@ -18,11 +19,11 @@ if [ $? -eq 0 ]; then
     printf "\nCompresssion successfull!\n"											| tee -a $LOG_FILE
     printf "\nBackup file created: $BACKUP_FILE_NAME [size: `ls -lh $DEST_DIR/$BACKUP_FILE_NAME | awk '{ print $5 }'`]\n"	| tee -a $LOG_FILE
     printf "\n==============================================================="							| tee -a $LOG_FILE
-    printf "\nUploading archive [$BACKUP_FILE_NAME] to S3 bucket: [$S3_BUCKET/$HOSTNAME/]\n" 							| tee -a $LOG_FILE
+    printf "\nUploading archive [$BACKUP_FILE_NAME] to S3 bucket: [$S3_BUCKET/$HOSTNAME/]\n" 					| tee -a $LOG_FILE
     printf "===============================================================\n"							| tee -a $LOG_FILE
 
-    aws s3 cp $DEST_DIR/$BACKUP_FILE_NAME s3://$S3_BUCKET/$HOSTNAME/								| tee -a $LOG_FILE
-    aws s3 cp $LOG_FILE s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log							| tee -a $LOG_FILE
+    /home/$USERNAME/.local/bin/aws s3 cp $DEST_DIR/$BACKUP_FILE_NAME s3://$S3_BUCKET/$HOSTNAME/					| tee -a $LOG_FILE
+    /home/$USERNAME/.local/bin/aws s3 cp $LOG_FILE s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log			| tee -a $LOG_FILE
 
     if [ $? -eq 0 ]; then
 	printf "\nUpload successfull!\n"											| tee -a $LOG_FILE
@@ -36,3 +37,6 @@ fi
 printf "\n==============================================================="							| tee -a $LOG_FILE
 printf "\nBackup JOB finished on: `date +%H:%M_%d.%m.%Y.`\n"									| tee -a $LOG_FILE
 printf "===============================================================\n\n"							| tee -a $LOG_FILE
+
+#Moving log file to backup
+mv $LOG_FILE $BACKUP_DIR/bash_scripts/backup_logs/${BACKUP_FILE_NAME%.tar.gz}.log

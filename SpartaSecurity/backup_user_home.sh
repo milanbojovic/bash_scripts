@@ -40,3 +40,6 @@ printf "===============================================================\n\n"				
 
 #Moving log file to backup
 mv $LOG_FILE $BACKUP_DIR/bash_scripts/backup_logs/${BACKUP_FILE_NAME%.tar.gz}.log
+
+#Turn off pc after backup
+sudo shutdown 0

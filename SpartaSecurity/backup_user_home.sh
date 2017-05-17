@@ -1,7 +1,6 @@
 #!/bin/bash
 
-USERNAME="natasakovacevic"
-BACKUP_DIR="/home/$USERNAME"
+BACKUP_DIR="/home/natasakovacevic"
 DEST_DIR="/tmp"
 LOG_FILE="$DEST_DIR/backup.log"
 S3_BUCKET="spartasecurity-backups"
@@ -22,8 +21,8 @@ if [ $? -eq 0 ]; then
     printf "\nUploading archive [$BACKUP_FILE_NAME] to S3 bucket: [$S3_BUCKET/$HOSTNAME/]\n" 					| tee -a $LOG_FILE
     printf "===============================================================\n"							| tee -a $LOG_FILE
 
-    /home/$USERNAME/.local/bin/aws s3 cp $DEST_DIR/$BACKUP_FILE_NAME s3://$S3_BUCKET/$HOSTNAME/					| tee -a $LOG_FILE
-    /home/$USERNAME/.local/bin/aws s3 cp $LOG_FILE s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log			| tee -a $LOG_FILE
+    /usr/bin/aws s3 cp $DEST_DIR/$BACKUP_FILE_NAME s3://$S3_BUCKET/$HOSTNAME/							| tee -a $LOG_FILE
+    /usr/bin/aws s3 cp $LOG_FILE s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log					| tee -a $LOG_FILE
 
     if [ $? -eq 0 ]; then
 	printf "\nUpload successfull!\n"											| tee -a $LOG_FILE
@@ -42,4 +41,4 @@ printf "===============================================================\n\n"				
 mv $LOG_FILE $BACKUP_DIR/bash_scripts/backup_logs/${BACKUP_FILE_NAME%.tar.gz}.log
 
 #Turn off pc after backup
-sudo shutdown 0
+/sbin/shutdown -P now

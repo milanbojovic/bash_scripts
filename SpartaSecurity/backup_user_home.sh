@@ -77,4 +77,4 @@ printf "===============================================================\n\n"				
 mv $LOG_FILE $BACKUP_DIR/bash_scripts/backup_logs/${BACKUP_FILE_NAME%.tar.gz}.log
 
 #Turn off pc after backup
-#/sbin/shutdown -P now
+/sbin/shutdown -P now

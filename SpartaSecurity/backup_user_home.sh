@@ -3,6 +3,7 @@
 DEST_DIR="/tmp"
 LOG_FILE="$DEST_DIR/backup.log"
 S3_BUCKET="spartasecurity-backups"
+UPLOAD_RETRY_CNT=10
 
 #Function definitions
 setBackupDir() {
@@ -18,6 +19,28 @@ setBackupDir() {
 		if [ "$HOSTNAME" == "sparta-03-zoka" ]; then
 			BACKUP_DIR="/home/koc01";
 		fi
+};
+
+uploadFile()   {
+		cnt=$UPLOAD_RETRY_CNT
+		upload_file=$1
+		upload_dest=$2
+		while [ $cnt -gt 0 ]
+		do
+			/usr/bin/aws s3 cp $upload_file	$upload_dest									| tee -a $LOG_FILE
+
+			if [ $? -eq 0 ]; then
+				printf "\nUpload  successfull!\n"									| tee -a $LOG_FILE
+				break;
+			else
+				if [ $cnt -gt 1 ]; then
+					printf "\nUpload failed! - RESTARTING!\n"							| tee -a $LOG_FILE
+				else
+					printf "\nUpload failed! - Maximum RETRY CNT REACHED - ABORTING!!!\n"				| tee -a $LOG_FILE
+			    	fi
+		    	fi
+		  	cnt=$(( $cnt - 1 ))
+		done
 };
 
 setBackupDir;
@@ -38,14 +61,10 @@ if [ $? -eq 0 ]; then
     printf "\nUploading archive [$BACKUP_FILE_NAME] to S3 bucket: [$S3_BUCKET/$HOSTNAME/]\n" 					| tee -a $LOG_FILE
     printf "===============================================================\n"							| tee -a $LOG_FILE
 
-    /usr/bin/aws s3 cp $DEST_DIR/$BACKUP_FILE_NAME s3://$S3_BUCKET/$HOSTNAME/							| tee -a $LOG_FILE
-    /usr/bin/aws s3 cp $LOG_FILE s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log					| tee -a $LOG_FILE
-
-    if [ $? -eq 0 ]; then
-	printf "\nUpload successfull!\n"											| tee -a $LOG_FILE
-    else
-	printf "\nUpload failed!\n"												| tee -a $LOG_FILE
-    fi
+    #/usr/bin/aws s3 cp $DEST_DIR/$BACKUP_FILE_NAME s3://$S3_BUCKET/$HOSTNAME/							| tee -a $LOG_FILE
+    uploadFile "$DEST_DIR/$BACKUP_FILE_NAME" "s3://$S3_BUCKET/$HOSTNAME/"
+    #/usr/bin/aws s3 cp $LOG_FILE s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log					| tee -a $LOG_FILE
+    uploadFile "$LOG_FILE" "s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log"
 else
     printf "\nCompresssion failed!\n"												| tee -a $LOG_FILE
 fi

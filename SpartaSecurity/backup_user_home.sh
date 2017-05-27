@@ -24,7 +24,7 @@ setBackupDir;
 
 printf "" 															| tee    $LOG_FILE
 printf "===============================================================" 							| tee -a $LOG_FILE
-printf "\nBackup JOB started on: `date +%H:%M_%d.%m.%Y.`\n" 									| tee -a $LOG_FILE
+printf "\nBackup JOB started on: `date +%H:%M_%d.%m.%Y.` by user: [`/usr/bin/whoami`]\n"                    			| tee -a $LOG_FILE
 printf "===============================================================\n"							| tee -a $LOG_FILE
 printf "\nCompressing directory contents: "$BACKUP_DIR"\n\n" 									| tee -a $LOG_FILE
 

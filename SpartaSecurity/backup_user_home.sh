@@ -1,9 +1,26 @@
 #!/bin/bash
 
-BACKUP_DIR="/home/natasakovacevic"
 DEST_DIR="/tmp"
 LOG_FILE="$DEST_DIR/backup.log"
 S3_BUCKET="spartasecurity-backups"
+
+#Function definitions
+setBackupDir() {
+		#Set BACKUP_DIR
+		if [ "$HOSTNAME" == "sparta-01-natasa" ]; then
+			BACKUP_DIR="/home/natasakovacevic";
+		fi
+
+		if [ "$HOSTNAME" == "sparta-02-deki" ]; then
+			BACKUP_DIR="/home/dejanmladenovic";
+		fi
+
+		if [ "$HOSTNAME" == "sparta-03-zoka" ]; then
+			BACKUP_DIR="/home/koc01";
+		fi
+};
+
+setBackupDir;
 
 printf "" 															| tee    $LOG_FILE
 printf "===============================================================" 							| tee -a $LOG_FILE
@@ -41,4 +58,4 @@ printf "===============================================================\n\n"				
 mv $LOG_FILE $BACKUP_DIR/bash_scripts/backup_logs/${BACKUP_FILE_NAME%.tar.gz}.log
 
 #Turn off pc after backup
-/sbin/shutdown -P now
+#/sbin/shutdown -P now

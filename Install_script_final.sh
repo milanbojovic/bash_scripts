@@ -1,80 +1,137 @@
 #!/bin/bash
 
-DEST_DIR="/tmp"
-LOG_FILE="$DEST_DIR/backup.log"
-S3_BUCKET="spartasecurity-backups"
-UPLOAD_RETRY_CNT=10
+	printGreen(){
+		printf "\n%s\n\n" "`tput smso``tput setf 2` $1 `tput sgr0`" | tee -a $log_file;
+		sleep 2;
+	};
 
-#Function definitions
-setBackupDir() {
-		#Set BACKUP_DIR
-		if [ "$HOSTNAME" == "sparta-01-natasa" ]; then
-			BACKUP_DIR="/home/natasakovacevic";
+	printRed(){
+		printf "\n%s\n\n" "`tput smso``tput setf 4` $1 `tput sgr0`" | tee -a $log_file;
+		sleep 2;
+	};
+
+	install(){
+		printGreen "Installing $1:" | tee -a $log_file;
+		sleep 2;
+		apt-get update;
+		apt-get install -y $1;
+		status=$?;
+		if [ $status -eq 0 ]; then
+			printGreen "$1 installation completed successfully";
+		else
+			printRed "$1 installation FAILED" !!!;
 		fi
+	};
 
-		if [ "$HOSTNAME" == "sparta-02-deki" ]; then
-			BACKUP_DIR="/home/dejanmladenovic";
-		fi
+echo '';
 
-		if [ "$HOSTNAME" == "sparta-03-zoka" ]; then
-			BACKUP_DIR="/home/koc01";
-		fi
-};
+log_file=install_script_log;
 
-uploadFile()   {
-		cnt=$UPLOAD_RETRY_CNT
-		upload_file=$1
-		upload_dest=$2
-		while [ $cnt -gt 0 ]
-		do
-			/usr/bin/aws s3 cp $upload_file	$upload_dest									| tee -a $LOG_FILE
+printGreen "Install script started" "Checking if user has ROOT privileges...";
 
-			if [ $? -eq 0 ]; then
-				printf "\nUpload  successfull!\n"									| tee -a $LOG_FILE
-				break;
-			else
-				if [ $cnt -gt 1 ]; then
-					printf "\nUpload failed! - RESTARTING!\n"							| tee -a $LOG_FILE
-				else
-					printf "\nUpload failed! - Maximum RETRY CNT REACHED - ABORTING!!!\n"				| tee -a $LOG_FILE
-			    	fi
-		    	fi
-		  	cnt=$(( $cnt - 1 ))
-		done
-};
+if [ $UID -eq 0 ]; then
 
-setBackupDir;
+	#Repositories for updating of packages
+	printGreen "Downloading GetDeb and PlayDeb";	
+	sleep 1;
+	wget http://archive.getdeb.net/install_deb/getdeb-repository_0.1-1~getdeb1_all.deb http://archive.getdeb.net/install_deb/playdeb_0.3-1~getdeb1_all.deb;
 
-printf "" 															| tee    $LOG_FILE
-printf "===============================================================" 							| tee -a $LOG_FILE
-printf "\nBackup JOB started on: `date +%H:%M_%d.%m.%Y.` by user: [`/usr/bin/whoami`]\n"                    			| tee -a $LOG_FILE
-printf "===============================================================\n"							| tee -a $LOG_FILE
-printf "\nCompressing directory contents: "$BACKUP_DIR"\n\n" 									| tee -a $LOG_FILE
+	printGreen "Installing GetDeb";
+	sleep 1;
+	dpkg -i getdeb-repository_0.1-1~getdeb1_all.deb;
 
-BACKUP_FILE_NAME="backup_`date +%H:%M_%d.%m.%Y`.tar.gz"
-tar -cvpzf "$DEST_DIR/$BACKUP_FILE_NAME" "$BACKUP_DIR" --exclude='.[^/]*'							| tee -a $LOG_FILE
+	pringGreen "Installing PlayDeb";
+	sleep 1;
+	dpkg -i playdeb_0.3-1~getdeb1_all.deb;
 
-if [ $? -eq 0 ]; then
-    printf "\nCompresssion successfull!\n"											| tee -a $LOG_FILE
-    printf "\nBackup file created: $BACKUP_FILE_NAME [size: `ls -lh $DEST_DIR/$BACKUP_FILE_NAME | awk '{ print $5 }'`]\n"	| tee -a $LOG_FILE
-    printf "\n==============================================================="							| tee -a $LOG_FILE
-    printf "\nUploading archive [$BACKUP_FILE_NAME] to S3 bucket: [$S3_BUCKET/$HOSTNAME/]\n" 					| tee -a $LOG_FILE
-    printf "===============================================================\n"							| tee -a $LOG_FILE
+	printGreen "Deleting Downloads";
+	rm -f getdeb-repository_0.1-1~getdeb1_all.deb;
+	rm -f playdeb_0.3-1~getdeb1_all.deb;
+	printGreen "Deleting Downloads GetDeb and PlayDeb - installation compleete";
+	sleep 1;
 
-    #/usr/bin/aws s3 cp $DEST_DIR/$BACKUP_FILE_NAME s3://$S3_BUCKET/$HOSTNAME/							| tee -a $LOG_FILE
-    uploadFile "$DEST_DIR/$BACKUP_FILE_NAME" "s3://$S3_BUCKET/$HOSTNAME/"
-    #/usr/bin/aws s3 cp $LOG_FILE s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log					| tee -a $LOG_FILE
-    uploadFile "$LOG_FILE" "s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log"
+	install apache2;
+	install skype;
+	install dropbox;
+	install tomcat7;
+
+	#Adding GIT repository:
+	echo | add-apt-repository ppa:git-core/ppa;
+	install git;
+	install maven;
+
+	#Adding Gimp repository:
+	echo | add-apt-repository ppa:otto-kesselgulasch/gimp;	
+
+	install gimp;
+	install gimp-data;
+	install gimp-plugin-registry;
+	install gimp-data-extras;
+
+	install flashplugin-installer;
+
+	#Adding repository JAVA
+	echo | add-apt-repository ppa:webupd8team/java;
+	install oracle-java7-installer;
+	install eclipse;
+	
+	#Adding VLC repository:
+	echo | add-apt-repository ppa:videolan/stable-daily;
+	install vlc;
+
+	printGreen "Installing DVD - encoding support for VLC:";
+	sleep 1;
+	echo 'deb http://download.videolan.org/pub/debian/stable/ /' | tee -a /etc/apt/sources.list.d/libdvdcss.list;
+	echo 'deb-src http://download.videolan.org/pub/debian/stable/ /' | tee -a /etc/apt/sources.list.d/libdvdcss.list;
+	wget -O - http://download.videolan.org/pub/debian/videolan-apt.asc | apt-key add -;
+
+	install libxine1-ffmpeg mencoder flac faac faad sox ffmpeg2theora libmpeg2-4 uudeview libmpeg3-1 mpeg3-utils mpegdemux liba52-dev mpeg2dec vorbis-tools id3v2 mpg321 mpg123 libflac++6 totem-mozilla icedax lame libmad0 libjpeg-progs libdvdcss2;
+	install ubuntu-wallpapers;
+	install ubuntu-restricted-extras;
+	
+
+	# For updates of some existing packages
+	printGreen "Adding repository for gnome 3 library updates";
+	echo | add-apt-repository -y ppa:gnome3-team/gnome3;
+	status=$?;
+	if [ $status -eq 0 ]; then
+		printGreen "Gnome 3 library repo added successfully";
+	else
+		printRed "Gnome 3 library repo adding FAILED !!!";
+	fi
+
+	# suggestion from "howtoubuntu.org"
+	printGreen "Adding repository for Oracle Java";
+
+	echo | add-apt-repository -y ppa:webupd8team/y-ppa-managsudo add-apt-repository -y ppa:webupd8team/javaer;
+	status=$?;
+	if [ $status -eq 0 ]; then
+		printGreen "Oracle Java repo added successfully";
+	else
+		printRed "Oracle Java repo adding FAILED !!!";
+	fi
+
+	#Upgrade all packages which can be upgraded
+	printGreen "Updating and upgrading packages !!!";
+	apt-get update;
+	apt-get -y upgrade;
+
+
+	##Cleanup !!!!!!!!!!!!
+	printGreen "Cleaning Up";
+	printf "\n%s\n\n" "" | tee -a $log_file;
+	sleep 2;
+	sudo apt-get -f install;
+	sudo apt-get autoremove;
+	sudo apt-get -y autoclean;
+	sudo apt-get -y clean;
+
+	printGreen "Script finished execution. Have a nice DAY!";
+	exit 1;
+
 else
-    printf "\nCompresssion failed!\n"												| tee -a $LOG_FILE
+	printRed "Error USER: '$USER' is not root.";
+
 fi
 
-printf "\n==============================================================="							| tee -a $LOG_FILE
-printf "\nBackup JOB finished on: `date +%H:%M_%d.%m.%Y.`\n"									| tee -a $LOG_FILE
-printf "===============================================================\n\n"							| tee -a $LOG_FILE
-
-#Moving log file to backup
-mv $LOG_FILE $BACKUP_DIR/bash_scripts/backup_logs/${BACKUP_FILE_NAME%.tar.gz}.log
-
-#Turn off pc after backup
-#/sbin/shutdown -P now
+printGreen "Script exiting";

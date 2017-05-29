@@ -19,6 +19,7 @@ setBackupDir() {
 		if [ "$HOSTNAME" == "sparta-03-zoka" ]; then
 			BACKUP_DIR="/home/koc01";
 		fi
+
 };
 
 uploadFile()   {
@@ -27,16 +28,20 @@ uploadFile()   {
 		upload_dest=$2
 		while [ $cnt -gt 0 ]
 		do
-			/usr/bin/aws s3 cp $upload_file	$upload_dest									| tee -a $LOG_FILE
+			/usr/bin/aws s3 cp $upload_file	$upload_dest								| tee -a $LOG_FILE
 
-			if [ $? -eq 0 ]; then
-				printf "\nUpload  successfull!\n"									| tee -a $LOG_FILE
+			filename=`/bin/echo "$upload_dest" | /usr/bin/awk -F'/' '{print $NF}'`
+
+			printf "\nVerifying upload!\n"
+
+			if [ `/usr/bin/aws s3 ls "$upload_dest" | /bin/grep  $filename | /usr/bin/wc -l` -eq 1 ]; then
+				printf "\nUpload  successfull!\n"								| tee -a $LOG_FILE
 				break;
 			else
-				if [ $cnt -gt 1 ]; then
-					printf "\nUpload failed! - RESTARTING!\n"							| tee -a $LOG_FILE
+				if [ $cnt -gt 0 ]; then
+					printf "\nUpload failed! - RESTARTING!\n"						| tee -a $LOG_FILE
 				else
-					printf "\nUpload failed! - Maximum RETRY CNT REACHED - ABORTING!!!\n"				| tee -a $LOG_FILE
+					printf "\nUpload failed! - Maximum RETRY CNT REACHED - ABORTING!!!\n"			| tee -a $LOG_FILE
 			    	fi
 		    	fi
 		  	cnt=$(( $cnt - 1 ))
@@ -62,7 +67,7 @@ if [ $? -eq 0 ]; then
     printf "===============================================================\n"							| tee -a $LOG_FILE
 
     #/usr/bin/aws s3 cp $DEST_DIR/$BACKUP_FILE_NAME s3://$S3_BUCKET/$HOSTNAME/							| tee -a $LOG_FILE
-    uploadFile "$DEST_DIR/$BACKUP_FILE_NAME" "s3://$S3_BUCKET/$HOSTNAME/"
+    uploadFile "$DEST_DIR/$BACKUP_FILE_NAME" "s3://$S3_BUCKET/$HOSTNAME/$BACKUP_FILE_NAME"
     #/usr/bin/aws s3 cp $LOG_FILE s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log					| tee -a $LOG_FILE
     uploadFile "$LOG_FILE" "s3://$S3_BUCKET/$HOSTNAME/${BACKUP_FILE_NAME%.tar.gz}.log"
 else

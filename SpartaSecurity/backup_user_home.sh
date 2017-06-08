@@ -3,7 +3,7 @@
 DEST_DIR="/tmp"
 LOG_FILE="$DEST_DIR/backup.log"
 S3_BUCKET="spartasecurity-backups"
-UPLOAD_RETRY_CNT=10
+UPLOAD_RETRY_CNT=20
 
 #Function definitions
 setBackupDir() {

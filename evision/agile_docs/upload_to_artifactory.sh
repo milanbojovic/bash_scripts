@@ -1,0 +1,3 @@
+curl -u md_document_write:1wasAd@@medDocument -X PUT "https://artifactory.braintribe.com/artifactory/releases/md-smartdocument-zone/adx-updates/adx-update-1.0.d6a90cb23620f8f91e3ad07676f4715af591e96b.zip" -T ~/Desktop/ppppp/adx-updates/adx-update-1.0.d6a90cb23620f8f91e3ad07676f4715af591e96b.zip
+curl -u md_document_write:1wasAd@@medDocument -X PUT "https://artifactory.braintribe.com/artifactory/releases/md-smartdocument-zone/adx-packages/adx-package-1.0.06d223dbf84fcc80c62db9f394158aa5aed58e9b.zip" -T ~/Desktop/ppppp/adx-packages/adx-package-1.0.06d223dbf84fcc80c62db9f394158aa5aed58e9b.zip
+curl -u md_document_write:1wasAd@@medDocument -X PUT "https://artifactory.braintribe.com/artifactory/releases/md-smartdocument-zone/util.zip" -T ~/Desktop/ppppp/util.zip
